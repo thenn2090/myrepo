@@ -1,54 +1,63 @@
-// FuelInput.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FuelBalanceContext } from '../context/FuelBalanceContext';
 
-const FuelInput = ({ onFuelChange }) => {
-  const [fuelCapacity, setFuelCapacity] = useState('');
-  const [currentFuel, setCurrentFuel] = useState('');
+const FuelInput = () => {
+  const { fuelBalance, setFuelBalance, fuelAmountSpent, setFuelAmountSpent } = useContext(FuelBalanceContext);
+  const [fuelAmount, setFuelAmount] = useState('');
+  const [fuelLiters, setFuelLiters] = useState('');
 
-  const handleSave = () => {
-    // Check if the inputs are valid numbers and ensure current fuel is not more than fuel capacity
-    if (isNaN(fuelCapacity) || isNaN(currentFuel)) {
-      Alert.alert('Invalid Input', 'Please enter valid numbers for fuel capacity and current fuel.');
+  const updateFuel = async () => {
+    const numericAmount = parseFloat(fuelAmount);
+    const numericLiters = parseFloat(fuelLiters);
+
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid fuel amount (₹).');
       return;
     }
 
-    if (parseFloat(currentFuel) > parseFloat(fuelCapacity)) {
-      Alert.alert('Invalid Fuel Level', 'Current fuel cannot be more than the fuel capacity.');
+    if (isNaN(numericLiters) || numericLiters <= 0) {
+      Alert.alert('Invalid Liters', 'Please enter a valid fuel quantity (L).');
       return;
     }
 
-    // Pass the values back to the parent component using the `onFuelChange` callback
-    onFuelChange({
-      fuelCapacity: parseFloat(fuelCapacity),
-      currentFuel: parseFloat(currentFuel),
-    });
+    const newLitersBalance = fuelBalance + numericLiters;
+    const newAmountSpent = fuelAmountSpent + numericAmount;
 
-    // Optionally, reset the form fields after saving
-    setFuelCapacity('');
-    setCurrentFuel('');
+    setFuelBalance(newLitersBalance);
+    setFuelAmountSpent(newAmountSpent);
+
+    await AsyncStorage.setItem('fuelBalance', newLitersBalance.toString());
+    await AsyncStorage.setItem('fuelAmountSpent', newAmountSpent.toString());
+
+    Alert.alert('Success', `Fuel updated!\nAmount: ₹${numericAmount}, Liters: ${numericLiters}L`);
+
+    setFuelAmount('');
+    setFuelLiters('');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Fuel Information</Text>
-      <Text style={styles.label}>Fuel Capacity (L):</Text>
+      <Text style={styles.label}>Fuel Amount Spent (₹):</Text>
       <TextInput
         style={styles.input}
-        value={fuelCapacity}
-        onChangeText={setFuelCapacity}
+        value={fuelAmount}
+        onChangeText={setFuelAmount}
         keyboardType="numeric"
-        placeholder="Enter fuel capacity"
+        placeholder="Enter amount spent"
       />
-      <Text style={styles.label}>Current Fuel (L):</Text>
+
+      <Text style={styles.label}>Fuel Liters Filled (L):</Text>
       <TextInput
         style={styles.input}
-        value={currentFuel}
-        onChangeText={setCurrentFuel}
+        value={fuelLiters}
+        onChangeText={setFuelLiters}
         keyboardType="numeric"
-        placeholder="Enter current fuel"
+        placeholder="Enter liters filled"
       />
-      <Button title="Save Fuel Info" onPress={handleSave} />
+
+      <Button title="Update Fuel" onPress={updateFuel} />
     </View>
   );
 };
@@ -56,26 +65,20 @@ const FuelInput = ({ onFuelChange }) => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    flexDirection: 'column',
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    fontWeight: 'bold',
   },
   label: {
     fontSize: 16,
+    fontWeight: 'bold',
     marginBottom: 5,
-    alignSelf: 'flex-start',
   },
   input: {
-    width: '80%',
+    width: '100%',
     padding: 10,
     borderWidth: 1,
-    marginBottom: 15,
-    borderRadius: 5,
+    borderRadius: 8,
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
 

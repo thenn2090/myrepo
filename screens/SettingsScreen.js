@@ -1,11 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import TollAmountInput from '../Toll/AddTollBalance';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SettingsScreen = ({ navigation }) => {
+
+  const clearStorage = async () => {
+    try {
+      await AsyncStorage.clear();
+      console.log('Storage successfully cleared!');
+    } catch (error) {
+      console.error('Error clearing storage:', error);
+    }
+  };
+
+  useEffect(()=>{
+    clearStorage();
+  })
+
   return (
     <View style={styles.container}>
-      <TollAmountInput />
+      clear
     </View>
   );
 };
